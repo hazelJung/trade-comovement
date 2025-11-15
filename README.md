@@ -15,6 +15,8 @@
 - `exp/이름`  
   - **개인 실험용 브랜치**
   - 각자 EDA + 공행성 + 모델링을 마음껏 하는 공간
+- `feature/작업이름`  
+  - **최종 파일 하나 올릴 임시 브랜치**
 
 > ✔ **원칙 요약**  
 > - 작업은 항상 `exp/본인이름`에서 한다.  
@@ -77,7 +79,7 @@ git push
 
 ---
 
-# 🔄 6️⃣ dev 최신 코드 반영
+# 🔄 6️⃣ dev, feature 최신 코드 반영
 
 ```bash
 git checkout dev
@@ -85,16 +87,31 @@ git pull origin dev
 
 git checkout exp/본인이름
 git merge dev
+
+git checkout feature/작업이름
+git merge dev
 ```
 
 ---
 
-# 🔀 7️⃣ exp → dev 반영(PR)
+# 🔀 7️⃣ exp → feature 올릴 파일들만 업로드 + feature  → dev 반영(PR)
+
+```bash
+git checkout dev
+git pull origin dev
+git checkout -b feature/작업이름
+
+git checkout exp/본인이름 -- 경로/파일명.py
+
+git add.
+git commit -m "feat: 작업내용"
+git push -u origin feature/작업이름
+```
 
 1) GitHub → Pull Request  
-2) base: develop / compare: exp/본인이름  
+2) base: develop / compare: feature/작업이름  
 3) 설명 작성 → Create PR  
-4) 팀장 승인 후 merge
+4) 팀원들 승인 후 merge
 
 ---
 
