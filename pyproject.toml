@@ -1,0 +1,23 @@
+[project]
+name = "competition"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pandas",
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "seaborn",
+    "plotly",
+    "scikit-learn",
+    "statsmodels",
+    "lightgbm",
+    "xgboost",
+    "tslearn",
+    "pmdarima",
+    "arch",
+    "tqdm",
+    "python-dotenv"
+]
