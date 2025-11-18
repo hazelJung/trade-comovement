@@ -1,0 +1,23 @@
+[project]
+name = "trade-comovement"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas",
+    "numpy>=1.18.5,<1.25.0",
+    "scipy",
+    "matplotlib",
+    "seaborn",
+    "plotly",
+    "scikit-learn",
+    "statsmodels",
+    "lightgbm",
+    "xgboost",
+    "tslearn",
+    "pmdarima",
+    "arch",
+    "tqdm",
+    "python-dotenv"
+]
