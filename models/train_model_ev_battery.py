@@ -8,6 +8,8 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 from tqdm import tqdm
 import sys
 from pathlib import Path
@@ -265,9 +267,74 @@ train_y = np.nan_to_num(train_y, nan=0.0, posinf=0.0, neginf=0.0)
 scaler = StandardScaler()
 train_X_scaled = scaler.fit_transform(train_X)
 
+print(f"학습 데이터 shape: {train_X_scaled.shape}")
+print(f"타겟 통계: mean={train_y.mean():.2f}, std={train_y.std():.2f}, min={train_y.min():.2f}, max={train_y.max():.2f}")
+
+# ============================================================
+# Cross-Validation으로 모델 성능 평가 (Time Series Split)
+# ============================================================
+print("\n" + "="*70)
+print("Cross-Validation 평가 (Time Series Split)")
+print("="*70)
+print("주의: 시계열 데이터이므로 Time Series Split을 사용합니다.")
+print("과거 데이터로 미래를 예측하는 방식으로 검증합니다.")
+print("일반 K-Fold는 사용하지 않습니다 (미래 데이터로 과거를 예측하는 것은 불가능).\n")
+
+tscv = TimeSeriesSplit(n_splits=3)
+
 # 개선 2: NMAE 손실 함수 고려
 USE_QUANTILE = False  # True로 설정하면 Quantile Regression 사용
 RIDGE_ALPHA = 1.0  # 튜닝 가능: 0.1, 1.0, 10.0 등
+
+cv_scores = []
+
+for fold, (train_idx, val_idx) in enumerate(tscv.split(train_X_scaled), 1):
+    X_train_cv, X_val_cv = train_X_scaled[train_idx], train_X_scaled[val_idx]
+    y_train_cv, y_val_cv = train_y[train_idx], train_y[val_idx]
+    
+    if USE_QUANTILE:
+        reg_cv = QuantileRegressor(quantile=0.5, alpha=RIDGE_ALPHA, solver='highs')
+    else:
+        reg_cv = Ridge(alpha=RIDGE_ALPHA)
+    
+    reg_cv.fit(X_train_cv, y_train_cv)
+    y_pred_cv = reg_cv.predict(X_val_cv)
+    
+    mae = mean_absolute_error(y_val_cv, y_pred_cv)
+    mse = mean_squared_error(y_val_cv, y_pred_cv)
+    rmse = np.sqrt(mse)
+    
+    # NMAE 계산 (상대 오차)
+    nmae = np.mean(np.abs(y_val_cv - y_pred_cv) / (np.abs(y_val_cv) + 1e-8))
+    
+    cv_scores.append({
+        'fold': fold,
+        'mae': mae,
+        'mse': mse,
+        'rmse': rmse,
+        'nmae': nmae
+    })
+    
+    print(f"Fold {fold}: MAE={mae:.2f}, RMSE={rmse:.2f}, NMAE={nmae:.4f}")
+
+# 평균 성능
+avg_mae = np.mean([s['mae'] for s in cv_scores])
+avg_rmse = np.mean([s['rmse'] for s in cv_scores])
+avg_nmae = np.mean([s['nmae'] for s in cv_scores])
+
+print("\n" + "="*70)
+print("Cross-Validation 평균 성능")
+print("="*70)
+print(f"평균 MAE: {avg_mae:.2f}")
+print(f"평균 RMSE: {avg_rmse:.2f}")
+print(f"평균 NMAE: {avg_nmae:.4f}")
+
+# ============================================================
+# 최종 모델 학습 (전체 데이터)
+# ============================================================
+print("\n" + "="*70)
+print("최종 모델 학습 (전체 데이터)")
+print("="*70)
 
 if USE_QUANTILE:
     # Quantile Regression (중앙값 = 0.5 quantile)
@@ -281,7 +348,7 @@ else:
 reg.fit(train_X_scaled, train_y)
 
 print("Model training completed!")
-print(f"Feature importance (coefficients):")
+print(f"\nFeature importance (coefficients):")
 for i, col in enumerate(feature_cols):
     print(f"  {col}: {reg.coef_[i]:.6f}")
 
