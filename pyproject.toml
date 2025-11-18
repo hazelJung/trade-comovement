@@ -19,5 +19,6 @@ dependencies = [
     "pmdarima",
     "arch",
     "tqdm",
-    "python-dotenv"
+    "python-dotenv",
+    "ipywidgets>=8.1.8",
 ]
